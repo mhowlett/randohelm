@@ -1,15 +1,16 @@
 {
   "name": "randomhelm",
   "version": "1.0.0",
-  "description": "",
-  "main": "test.js",
+  "description": "Random Patch Generator for Helm",
+  "main": "main.js",
   "dependencies": {
     "babel-preset-es2015": "^6.9.0"
   },
   "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "babel -o dist/randohelm.js main.js",
+    "dev": "npm run build && node dist/randohelm.js"
   },
-  "author": "",
-  "license": "ISC"
+  "author": "Matt Howlett",
+  "license": "Attribution 4.0 International (CC BY 4.0)"
 }
