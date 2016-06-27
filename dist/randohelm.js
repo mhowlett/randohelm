@@ -1,6 +1,6 @@
-"use strict";
+'use strict';
 
-var _fs = require("fs");
+var _fs = require('fs');
 
 var _fs2 = _interopRequireDefault(_fs);
 
@@ -9,6 +9,16 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var filenameBase = process.argv[2];
 var numberToProduce = parseInt(process.argv[3]);
 var numberOfModulations = parseInt(process.argv[4]);
+var probabilityOfDefault = parseFloat(process.argv[5]);
+var templateFile = process.argv[6];
+
+var templatePatch = templateFile ? JSON.parse(_fs2.default.readFileSync(templateFile, 'utf8')) : null;
+
+var ModulationType = {
+  NONE: 0,
+  MONO_SEQ: 1,
+  ALL: 2
+};
 
 var ParamType = {
   INTEGER: 0,
@@ -18,37 +28,37 @@ var ParamType = {
 var modulationSources = ["mono_lfo_1", "mono_lfo_2", "poly_lfo", "step_sequencer"];
 
 var paramSpecs = {
-  "amp_attack": [0, 4, ParamType.FLOAT, 0.1, true],
-  "amp_decay": [0, 4, ParamType.FLOAT, 1.5, true],
-  "amp_release": [0, 4, ParamType.FLOAT, 0.3, true],
-  "amp_sustain": [0, 1, ParamType.FLOAT, 1, true],
-  "arp_frequency": [-1, 4, ParamType.FLOAT, 2, false], // this is 2^x
-  "arp_gate": [0, 1, ParamType.FLOAT, 0.5],
-  "arp_octaves": [1, 4, ParamType.INTEGER, 1],
-  "arp_on": [0, 1, ParamType.INTEGER, 0],
-  "arp_pattern": [0, 4, ParamType.INTEGER, 0],
-  "arp_sync": [0, 3, ParamType.INTEGER, 1],
-  "arp_tempo": [0, 11, ParamType.INTEGER, 9],
-  "beats_per_minute": [20, 300, ParamType.FLOAT, 120],
-  "cross_modulation": [0, 0.5, ParamType.FLOAT, 0],
-  "cutoff": [28, 127, ParamType.FLOAT, 80],
-  "delay_dry_wet": [0, 1, ParamType.FLOAT, 0.5],
-  "delay_feedback": [-1, 1, ParamType.FLOAT, 0.4],
-  "delay_frequency": [-2, 5, ParamType.FLOAT, 2.0],
-  "delay_on": [0, 1, ParamType.INTEGER, 0],
-  "delay_sync": [0, 3, ParamType.INTEGER, 1],
-  "delay_tempo": [0, 11, ParamType.INTEGER, 9],
-  "fil_attack": [0, 4, ParamType.INTEGER, 0.1],
-  "fil_decay": [0, 4, ParamType.INTEGER, 1.5],
-  "fil_env_depth": [-128, 128, ParamType.FLOAT, 0],
-  "fil_release": [0, 4, ParamType.INTEGER, 1.5],
-  "fil_sustain": [0, 1, ParamType.INTEGER, 0.5],
-  "filter_saturation": [-60, 60, ParamType.FLOAT, 0],
-  "filter_type": [0, 6, ParamType.INTEGER, 6],
-  "formant_on": [0, 1, ParamType.INTEGER, 0],
-  "formant_x": [0, 1, ParamType.FLOAT, 0.5],
-  "formant_y": [0, 1, ParamType.FLOAT, 0.5],
-  "keytrack": [-1, 1, ParamType.FLOAT, 0],
+  "amp_attack": [0, 4, ParamType.FLOAT, 0.1, ModulationType.ALL],
+  "amp_decay": [0, 4, ParamType.FLOAT, 1.5, ModulationType.ALL],
+  "amp_release": [0, 4, ParamType.FLOAT, 0.3, ModulationType.ALL],
+  "amp_sustain": [0, 1, ParamType.FLOAT, 1, ModulationType.ALL],
+  "arp_frequency": [-1, 4, ParamType.FLOAT, 2, ModulationType.NONE], // actual value is 2^x
+  "arp_gate": [0, 1, ParamType.FLOAT, 0.5, ModulationType.MONO_SEQ],
+  "arp_octaves": [1, 4, ParamType.INTEGER, 1, ModulationType.MONO_SEQ],
+  "arp_on": [0, 1, ParamType.INTEGER, 0, false, ModulationType.NONE],
+  "arp_pattern": [0, 4, ParamType.INTEGER, 0, false, ModulationType.MONO_SEQ],
+  "arp_sync": [0, 3, ParamType.INTEGER, 1, false, ModulationType.NONE],
+  "arp_tempo": [0, 11, ParamType.INTEGER, 9, false, ModulationType.MONO_SEQ],
+  "beats_per_minute": [20, 300, ParamType.FLOAT, 120, true, ModulationType.MONO_SEQ],
+  "cross_modulation": [0, 0.5, ParamType.FLOAT, 0, true, ModulationType.ALL],
+  "cutoff": [28, 127, ParamType.FLOAT, 80, true, ModulationType.ALL],
+  "delay_dry_wet": [0, 1, ParamType.FLOAT, 0.5, true, ModulationType.MONO_SEQ],
+  "delay_feedback": [-1, 1, ParamType.FLOAT, 0.4, true, ModulationType.MONO_SEQ],
+  "delay_frequency": [-2, 5, ParamType.FLOAT, 2.0, true, ModulationType.NONE],
+  "delay_on": [0, 1, ParamType.INTEGER, 0, false, ModulationType.NONE],
+  "delay_sync": [0, 3, ParamType.INTEGER, 1, ModulationType.NONE],
+  "delay_tempo": [0, 11, ParamType.INTEGER, 9, ModulationType.MONO_SEQ],
+  "fil_attack": [0, 4, ParamType.INTEGER, 0.1, true, ModulationType.ALL],
+  "fil_decay": [0, 4, ParamType.INTEGER, 1.5, true, ModulationType.ALL],
+  "fil_env_depth": [-128, 128, ParamType.FLOAT, 0, true, ModulationType.ALL],
+  "fil_release": [0, 4, ParamType.INTEGER, 1.5, ModulationType.ALL],
+  "fil_sustain": [0, 1, ParamType.INTEGER, 0.5, ModulationType.ALL],
+  "filter_saturation": [-60, 60, ParamType.FLOAT, 0, ModulationType.ALL],
+  "filter_type": [0, 6, ParamType.INTEGER, 6, ModulationType.NONE],
+  "formant_on": [0, 1, ParamType.INTEGER, 0, ModulationType.NONE],
+  "formant_x": [0, 1, ParamType.FLOAT, 0.5, ModulationType.ALL],
+  "formant_y": [0, 1, ParamType.FLOAT, 0.5, ModulationType.ALL],
+  "keytrack": [-1, 1, ParamType.FLOAT, 0], // TODO: finish specifying modulation types.
   "legato": [0, 1, ParamType.INTEGER, 0],
   "mod_attack": [0, 4, ParamType.FLOAT, 0.1],
   "mod_decay": [0, 4, ParamType.FLOAT, 1.5],
@@ -147,17 +157,22 @@ var paramSpecs = {
   //  "volume": [0, 1, ParamType.FLOAT, 0.75] // better to hold this constant.
 };
 
+// TODO: make use of MONO_SEQ destinations.
 var modulationDestinations = Object.keys(paramSpecs).filter(function (s) {
-  return paramSpecs[s][4];
+  return paramSpecs[s][4] == ModulationType.ALL;
 });
 
-console.log(modulationDestinations);
-
 function makeModulation() {
-  var result = {};
-  result.source = modulationSources[Math.floor(Math.random() * (modulationSources.length + 1))];
-  result.destination;
-  return result;
+  var r = {};
+  r.source = modulationSources[Math.floor(Math.random() * modulationSources.length)];
+  r.destination = modulationDestinations[Math.floor(Math.random() * modulationDestinations.length)];
+  var paramSpec = paramSpecs[r.destination];
+  if (paramSpec[2] == ParamType.FLOAT) {
+    r.amount = Math.random() * (paramSpec[1] - paramSpec[0]);
+  } else {
+    r.amount = Math.floor(Math.random() * (paramSpec[1] - paramSpec[0] + 1));
+  }
+  return r;
 }
 
 function makePatch() {
@@ -168,14 +183,12 @@ function makePatch() {
     "author": "randohelm"
   };
 
-  var probDefault = 0.5;
-
   result.settings = Object.keys(paramSpecs).reduce(function (accum, current) {
     var min = paramSpecs[current][0];
     var max = paramSpecs[current][1];
     var paramType = paramSpecs[current][2];
-    var defaultValue = paramSpecs[current][3];
-    if (Math.random() < probDefault) {
+    var defaultValue = templatePatch ? templatePatch.settings[current] : paramSpecs[current][3];
+    if (Math.random() < 1.0 - probabilityOfDefault) {
       accum[current] = defaultValue;
     } else {
       if (paramType === ParamType.INTEGER) {
@@ -187,13 +200,16 @@ function makePatch() {
     return accum;
   }, {});
 
-  result.settings.modulations = new Array(numberOfModulations).fill(makeModulation());
   result.settings.volume = 0.75;
+
+  result.settings.modulations = new Array(numberOfModulations).fill(null).map(function (a) {
+    return makeModulation();
+  });
 
   var output = JSON.stringify(result, null, 2);
   return output;
 }
 
 for (var i = 0; i < numberToProduce; ++i) {
-  _fs2.default.writeFile("" + filenameBase + i + ".helm", makePatch());
+  _fs2.default.writeFile('' + filenameBase + i + '.helm', makePatch());
 }

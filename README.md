@@ -5,8 +5,7 @@ A random patch generator for the [Helm Synth](http://tytel.org/helm/) by Matt Ty
 
 ### Building
 
-Written in ES2015, so needs transpiling before running, though unnecessary because I've included the 
-transpiled version in the repo.
+Written in ES2015, so needs transpiling before running.
 
 ```
 npm i
@@ -24,16 +23,17 @@ cd /Users/admin/Library/Audio/Presets/Helm/User Patches/Matts Patches
 then something like:
 
 ```
-node /git/randohelm/dist/randohelm.js [basePatchName] [numberOfPatchesToMake] [maxNumberOfModulations]
+node /git/randohelm/dist/randohelm.js basePatchName numberOfPatchesToMake maxNumberOfModulations probabilityOfDefaultValue [templatePatchPath]
 ```
 
 eg:
 
 ```
-node /git/randohelm/dist/randohelm.js tmp 4 3
+node /git/randohelm/dist/randohelm.js tmp 4 3 0.5
+node /git/randohelm/dist/randohelm.js tmp 32 1 0.95 ./organ.helm
 ```
 
-will make patches:
+the first will make 4 patches:
 
 ```
 tmp0.helm
@@ -41,6 +41,14 @@ tmp1.helm
 tmp2.helm
 tmp3.helm
 ```
+
+the second will make 32 relatively minor random variations on the patch organ.helm.
+
+### Methodology
+
+1. Create a wide variety of sounds by setting a low value for probabilityOfDefaultValue. Most of them will be rubbish.
+2. Select the best of these and use them as a templatePatch + use a high probabilityOfDefaultValue.
+
 
 ### TODO
 
